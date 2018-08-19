@@ -1,0 +1,12 @@
+Att: AttNm Att FilSz FilTim
+Permit: Permit PermitNo PermitDate PostDate NSku Qty Tot GLAc GLAcName BankCode ByUsr DteCrt DteUpd
+PermitD: PermitD Permit Sku SeqNo Qty BchNo Rate Amt DteCrt DteUpd
+PgmPrm: Apn
+Prm: UOMFn UomPth ZHT0Fn ZHT0Pth MB52Fn MB52Pth GLBalFn GLBalPth BIgDifCtlVal
+Prm_C: UOMFn UomPth ZHT0Fn ZHT0Pth MB52Fn MB52Pth GLBalFn GLBalPth BIgDifCtlVal
+Prm_N: UOMFn UomPth ZHT0Fn ZHT0Pth MB52Fn MB52Pth GLBalFn GLBalPth BIgDifCtlVal
+SkuNoLongerTax: Sku
+SKURepackMulti: SKUNew SKUFm FmSkuQty
+SkuTaxBy3rdParty: Sku RateU
+Wrk: AttNm Att FilSz FilTim
+ZZ_DbtUpdSeq: PermitNo PermitDate PermitD Permit Sku SeqNo Qty BchNo Rate Amt DteCrt DteUpd BchRateSeq
