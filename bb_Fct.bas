@@ -33,8 +33,8 @@ On Error Resume Next
 W.Close
 Set W = Nothing
 End Sub
-Sub WDrp(TT)
-DbDrpTbl W, TT
+Sub WDrp(Tt)
+DbttDrp W, Tt
 End Sub
 Function PnmFfn$(A$)
 PnmFfn = PnmPth(A) & PnmFn(A)
@@ -73,11 +73,11 @@ End Sub
 Function WTny() As String()
 WTny = DbTny(W)
 End Function
-Function WStru$(Optional TT$)
-If TT = "" Then
+Function WStru$(Optional Tt$)
+If Tt = "" Then
     WStru = DbStru(W)
 Else
-    WStru = DbttStru(W, TT)
+    WStru = DbttStru(W, Tt)
 End If
 End Function
 Function WAcs() As Access.Application
@@ -90,8 +90,8 @@ Function WtStru$(T$)
 WtStru = DbtStru(W, T)
 End Function
 
-Function WttStru$(TT)
-WttStru = DbttStru(W, TT)
+Function WttStru$(Tt)
+WttStru = DbttStru(W, Tt)
 End Function
 Function WFb$()
 WFb = ApnWFb(Apn)
@@ -646,9 +646,9 @@ Function FxHasWs(A, WsNm$) As Boolean
 FxHasWs = AyHas(FxWsNy(A), WsNm)
 End Function
 
-Sub DbtImpTbl(A As Database, TT)
+Sub DbtImpTbl(A As Database, Tt)
 Dim Tny$(), J%, S$
-Tny = CvNy(TT)
+Tny = CvNy(Tt)
 For J = 0 To UB(Tny)
     DbtDrp A, "#I" & Tny(J)
     S = FmtQQ("Select * into [#I?] from [?]", Tny(J), Tny(J))
@@ -846,6 +846,38 @@ For Each C In A.ListColumns
     End If
 Next
 End Sub
+Sub LoSetWdt_zC(A As ListObject, W%, C$)
+A.ListColumns(C).DataBodyRange.EntireColumn.ColumnWidth = W
+End Sub
+Sub LoSetAlignC_zC(A As ListObject, C$)
+A.ListColumns(C).DataBodyRange.HorizontalAlignment = XlHAlign.xlHAlignCenter
+End Sub
+Sub LoSetAlignC(A As ListObject, Cc0)
+AyDoPX CvNy(Cc0), "LoSetFmt_zC", A
+End Sub
+Sub LoSetFmt_zC(A As ListObject, Fmt$, C$)
+A.ListColumns(C).DataBodyRange.Formula = Fmt
+End Sub
+Sub LoSetFmt(A As ListObject, Fmt$, Cc0)
+AyDoABX CvNy(Cc0), "LoSetFmt_zC", A, Fmt
+End Sub
+Sub LoSetWdt(A As ListObject, W%, Cc0)
+AyDoABX CvNy(Cc0), "LoSetWdt_zC", A, W
+End Sub
+Sub AyDoABX(Ay, ABX$, A, B)
+If Sz(Ay) = 0 Then Exit Sub
+Dim X
+For Each X In Ay
+    Run ABX, A, B, X
+Next
+End Sub
+Sub AyDoPX(Ay, PX$, P)
+If Sz(Ay) = 0 Then Exit Sub
+Dim X
+For Each X In Ay
+    Run PX, P, X
+Next
+End Sub
 Function SqRplLo(A, Lo As ListObject) As ListObject
 Dim LoNm$, At As Range
 LoNm = Lo.Name
@@ -891,7 +923,7 @@ End Function
 Function AyRmvFstNonLetter(A) As String()
 AyRmvFstNonLetter = AyMapSy(A, "RmvFstNonLetter")
 End Function
-Function DbtNewWb(A As Database, TT) As Workbook
+Function DbtNewWb(A As Database, Tt) As Workbook
 
 End Function
 
@@ -922,23 +954,17 @@ For J = A.ListRows.Count To 2 Step -1
     A.ListRows(J).Delete
 Next
 End Sub
-Function DbDrpTbl(A As Database, TT)
-AyDoPX CvNy(TT), "DbtDrp", A
+Function DbttDrp(A As Database, Tt)
+AyDoPX CvNy(Tt), "DbtDrp", A
 End Function
 Sub SavRec()
 DoCmd.RunCommand acCmdSaveRecord
 End Sub
 
-Sub AyDoPX(A, PXFunNm$, P)
-If Sz(A) = 0 Then Exit Sub
-Dim I
-For Each I In A
-    Run PXFunNm, P, I
-Next
-End Sub
 Function DbqRs(A As Database, Sql) As DAO.Recordset
 Set DbqRs = A.OpenRecordset(Sql)
 End Function
+
 Function Acs() As Access.Application
 Static X As Boolean, Y As Access.Application
 On Error GoTo X
@@ -1245,8 +1271,8 @@ For J = 0 To UB(A)
 Next
 AyWdt = O
 End Function
-Function TTStru$(TT)
-TTStru = DbttStru(CurrentDb, TT)
+Function TtStru$(Tt)
+TtStru = DbttStru(CurrentDb, Tt)
 End Function
 Function TblStru$(T$)
 TblStru = DbtStru(CurrentDb, T)
@@ -1462,7 +1488,7 @@ If B <> "" Then
 End If
 On Error GoTo X
 TblLnkFx "#", CStr(A), WsNm
-TblDrp "#"
+TtDrp "#"
 Exit Function
 X:
 'FxWs_LnkErMsg = Err.Description
@@ -1586,25 +1612,25 @@ PushAy O, B
 AyAdd = O
 End Function
 Sub ZZ_DbtWhDupKey()
-TblDrp "#A #B"
+TtDrp "#A #B"
 DoCmd.RunSQL "Select Distinct Sku,BchNo,CLng(Rate) as RateRnd into [#A] from ZZ_DbtUpdSeq"
 DbtWhDupKey CurrentDb, "#A", "Sku BchNo", "#B"
-TTBrw "#B"
+TtBrw "#B"
 Stop
 TblDrp "#B"
 End Sub
-Sub TTWbBrw(TT, Optional UseWc As Boolean)
-WbVis TTWb(TT, UseWc)
+Sub TtWbBrw(Tt, Optional UseWc As Boolean)
+WbVis TtWb(Tt, UseWc)
 End Sub
 Sub TblBrw(T)
 DoCmd.OpenTable T
 End Sub
-Function CvTT(A) As String()
-CvTT = CvNy(A)
+Function CvTt(A) As String()
+CvTt = CvNy(A)
 End Function
 
-Sub TTBrw(TT)
-'OFunAyDo DoCmd, "OpenTable", CvTT(TT)
+Sub TtBrw(Tt)
+'OFunAyDo DoCmd, "OpenTable", CvTt(Tt)
 End Sub
 
 Sub DbtWhDupKey(A As Database, T$, KK, TarTbl$)
@@ -1692,30 +1718,32 @@ For Each I In A
 Next
 End Sub
 Sub AcsClsTbl(A As Access.Application)
-Dim T
+Dim T As AccessObject
 For Each T In A.CodeData.AllTables
     A.DoCmd.Close acTable, T.Name
 Next
 End Sub
-
-Sub AcsTbl_Cls(A As Access.Application, TT)
-'AyNmDoPX A.CodeData.AllTables, "AcsTbl_Cls"
+Sub AcstCls(A As Access.Application, T$)
+A.DoCmd.Close acTable, T, acSaveYes
+End Sub
+Sub AcsttCls(A As Access.Application, Tt)
+AyDoPX CvNy(Tt), "AcstCls", A
 End Sub
 
 Sub ClsTbl()
 AcsClsTbl Application
 End Sub
 
-Sub TblCls(TT)
-AcsTbl_Cls Access.Application, TT
+Sub TtCls(Tt)
+AyDo CvNy(Tt), "TblCls"
 End Sub
 
-Sub TblCls_1(T)
+Sub TblCls(T)
 DoCmd.Close acTable, T
 End Sub
 
-Sub TblDrp(TT)
-DbDrpTbl CurrentDb, TT
+Sub TtDrp(Tt)
+DbttDrp CurrentDb, Tt
 End Sub
 
 Sub TblDrp_1(T)
@@ -2282,9 +2310,9 @@ Function DrsColSy(A As Drs, F) As String()
 DrsColSy = DrsColInto(A, F, EmpSy)
 End Function
 
-Sub DbtDrp(A As Database, TT)
+Sub DbtDrp(A As Database, Tt)
 Dim Tny$(), T
-Tny = CvNy(TT)
+Tny = CvNy(Tt)
 For Each T In Tny
     If DbHasTbl(A, T) Then A.Execute FmtQQ("Drop Table [?]", T)
 Next
@@ -2292,13 +2320,13 @@ End Sub
 
 Function DbtLnk(A As Database, T$, S$, Cn$) As String()
 On Error GoTo X
-Dim TT As New DAO.TableDef
+Dim Tt As New DAO.TableDef
 DbDrpTbl A, T
-With TT
+With Tt
     .Connect = Cn
     .Name = T
     .SourceTableName = S
-    A.TableDefs.Append TT
+    A.TableDefs.Append Tt
 End With
 Exit Function
 X:
@@ -2694,8 +2722,8 @@ Function RgVis(A As Range) As Range
 XlsVis A.Application
 Set RgVis = A
 End Function
-Sub DbtWrtFx(A As Database, TT, Fx$)
-DbttWb(A, TT).SaveAs Fx
+Sub DbttWrtFx(A As Database, Tt, Fx$)
+DbttWb(A, Tt).SaveAs Fx
 End Sub
 Sub WsClrLo(A As Worksheet)
 Dim Ay() As ListObject, J%
@@ -2704,8 +2732,8 @@ For J = 0 To UB(Ay)
     Ay(J).Delete
 Next
 End Sub
-Sub TblWrtFx(TT, Fx$)
-DbtWrtFx CurrentDb, TT, Fx
+Sub TtWrtFx(Tt, Fx$)
+DbttWrtFx CurrentDb, Tt, Fx
 End Sub
 Function WbAddWs(A As Workbook, Optional WsNm, Optional BefWsNm$, Optional AftWsNm$) As Worksheet
 Dim O As Worksheet, Bef As Worksheet, Aft As Worksheet
@@ -2758,13 +2786,13 @@ Function FfnIsExist(A) As Boolean
 On Error Resume Next
 FfnIsExist = Dir(A) <> ""
 End Function
-Function TTWb(TT, Optional UseWc As Boolean) As Workbook
-Set TTWb = DbttWb(CurrentDb, TT, UseWc)
+Function TtWb(Tt, Optional UseWc As Boolean) As Workbook
+Set TtWb = DbttWb(CurrentDb, Tt, UseWc)
 End Function
-Function DbttWb(A As Database, TT, Optional UseWc As Boolean) As Workbook
+Function DbttWb(A As Database, Tt, Optional UseWc As Boolean) As Workbook
 Dim O As Workbook
 Set O = NewWb
-Set DbttWb = WbAddDbtt(O, A, TT, UseWc)
+Set DbttWb = WbAddDbtt(O, A, Tt, UseWc)
 WbWs(O, "Sheet1").Delete
 End Function
 Function WbA1(A As Workbook, Optional WsNm) As Range
@@ -2812,8 +2840,8 @@ For Each X In A
 Next
 End Sub
 
-Function WbAddDbtt(A As Workbook, Db As Database, TT, Optional UseWc As Boolean) As Workbook
-AyDoPPXP CvTT(TT), "WbAddDbt", A, Db, UseWc
+Function WbAddDbtt(A As Workbook, Db As Database, Tt, Optional UseWc As Boolean) As Workbook
+AyDoPPXP CvTt(Tt), "WbAddDbt", A, Db, UseWc
 Set WbAddDbtt = A
 End Function
 
@@ -3046,12 +3074,12 @@ Dim Cn$: Cn = FxDaoCnStr(Fx)
 Dim Src$: Src = WsNm & "$"
 DbtLnkFx = DbtLnk(A, T, Src, Cn)
 End Function
-Function TblLnkFb(TT, Fb$, Optional FbTny0) As String()
-TblLnkFb = DbtLnkFb(CurrentDb, TT, Fb, FbTny0)
+Function TblLnkFb(Tt, Fb$, Optional FbTny0) As String()
+TblLnkFb = DbtLnkFb(CurrentDb, Tt, Fb, FbTny0)
 End Function
-Function DbtLnkFb(A As Database, TT, Fb$, Optional FbTny0) As String()
+Function DbtLnkFb(A As Database, Tt, Fb$, Optional FbTny0) As String()
 Dim Tny$(), FbTny$()
-Tny = CvNy(TT)
+Tny = CvNy(Tt)
 FbTny = CvNy(FbTny0)
     Select Case True
     Case Sz(FbTny) = Sz(Tny)
@@ -3100,9 +3128,9 @@ Dim Ay$()
 Ay = DbtFny_zAutoQuote(A, T)
 DbtStru = T & ": " & JnSpc(Ay)
 End Function
-Function DbttStru$(A As Database, TT)
+Function DbttStru$(A As Database, Tt)
 Dim Tny$(), O$(), J%
-Tny = CvNy(TT)
+Tny = CvNy(Tt)
 For J = 0 To UB(Tny)
     Push O, DbtStru(A, Tny(J))
 Next
@@ -3946,7 +3974,7 @@ If Not X Then
     Y = CurDbPth & "Src\"
     PthEns Y
 End If
-Y = SrcPth
+SrcPth = Y
 End Function
 Sub AppExpMd()
 Dim MdNm$, I, P$
@@ -4173,8 +4201,8 @@ End Function
 Function SqWs(A) As Worksheet
 Set SqWs = LoWs(SqLo(A))
 End Function
-Sub WImpTbl(TT)
-DbtImpTbl W, TT
+Sub WImpTbl(Tt)
+DbtImpTbl W, Tt
 End Sub
 
 Function WbMax(A As Workbook) As Workbook

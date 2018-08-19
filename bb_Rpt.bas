@@ -893,7 +893,7 @@ WRun "Select BusArea,CCur(0) as Bef,CCur(0) as Aft,GLBal,CCur(0) as [Dif Bef],CC
 End Sub
 
 Sub WDrp(Tny0)
-DbDrpTbl W, Tny0
+DbttDrp W, Tny0
 End Sub
 Sub QClsTbl()
 AcsClsTbl WAcs
