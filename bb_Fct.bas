@@ -119,22 +119,6 @@ Sub DbCrtResTbl(A As Database)
 DbtDrp A, "Res"
 DoCmd.RunSQL "Create Table Res (ResNm Text(50), Att Attachment)"
 End Sub
-Function DbResExp$(A As Database, ResNm)
-'Resnm is Tbl.Fld.Key  With Tbl-Dft and Fld-Dft as Res
-'Export the res to tmpFfn and return tmpFfn
-Dim O$
-O = TmpFfn
-DbResAttFld(A, ResNm).SaveToFile O
-DbResExp = O
-End Function
-Function DbResAttFld(A As Database, ResNm) As Field2
-End Function
-Sub ResClr(A$)
-DbResClr CurrentDb, A
-End Sub
-Sub DbResClr(A As Database, ResNm$)
-A.Execute "Delete From Res where ResNm='" & ResNm & "'"
-End Sub
 Sub RsDmp(A As Recordset)
 AyDmp RsCsvLy(A)
 A.MoveFirst
@@ -144,7 +128,7 @@ AyDmp RsCsvLyByFny0(A, Fny0)
 A.MoveFirst
 End Sub
 Function AttRs(A$) As AttRs
-AttRs = DbAttRs(CurrentDb, A)
+AttRs = DbAtt_Rs(CurrentDb, A)
 End Function
 Function AttFny() As String()
 AttFny = ItrNy(DbFstAttRs(CurrentDb).AttRs.Fields)
@@ -159,13 +143,84 @@ End With
 F2.SaveToFile ToFfn
 AttRs_Exp = ToFfn
 End Function
-Function DbAttExp$(A As Database, Att$, ToFfn$)
-'Exporting the only file in Att
-If Not DbAtt_HasOnlyOneFile(A, Att) Then Stop
-DbAttExp = AttRs_Exp(DbAttRs(A, Att), ToFfn)
+Function DbAtt_Exp$(A As Database, Att$, ToFfn$)
+'Exporting the first File in Att.
+'If no file in att, error
+'If any, export and return the
+Dim N%
+N = DbAtt_FilCnt(A, Att)
+If N <> 1 Then
+    Er "DbAtt_Exp|[Att] in [Db] has [FilCnt] which be one.|Not able to export [ToFfn]", _
+        Att, A.Name, N, ToFfn
+End If
+DbAtt_Exp = AttRs_Exp(DbAtt_Rs(A, Att), ToFfn)
 End Function
-Function DbAttRs(A As Database, Att$) As AttRs
-With DbAttRs
+Sub Er(Msg$, ParamArray Ap())
+Dim Av(), O$()
+Av = Ap
+O = MsgAv_Ly(Msg, Av)
+AyBrw O
+Err.Raise 1
+End Sub
+Function MsgNy(A$) As String()
+Dim O$(), P%, J%
+O = Split(A, "[")
+AyShift O
+For J = 0 To UB(O)
+    P = InStr(O(J), "]")
+    O(J) = "[" & Left(O(J), P)
+Next
+MsgNy = O
+End Function
+Function NyAv_Ly(A$(), Av()) As String()
+Dim W%, O$(), J%, A1$(), A2$()
+W = AyWdt(A)
+A1 = AyAlignL(A)
+A2 = AyAddSfx(A1, " : ")
+For J = 0 To UB(A)
+    PushAy O, NmV_Ly(A2(J), Av(J))
+Next
+NyAv_Ly = AyAddPfx(O, Space(4))
+End Function
+Function NmV_Ly(Nm$, V) As String()
+Dim O$(), S$, J%
+O = VarLy(V)
+O(0) = Nm & O(0)
+S = Space(Len(Nm))
+For J = 1 To UB(O)
+    O(J) = S & O(J)
+Next
+NmV_Ly = O
+End Function
+Function IsPrim(A) As Boolean
+Select Case VarType(A)
+Case _
+   VbVarType.vbBoolean, _
+   VbVarType.vbByte, _
+   VbVarType.vbCurrency, _
+   VbVarType.vbDate, _
+   VbVarType.vbDecimal, _
+   VbVarType.vbDouble, _
+   VbVarType.vbInteger, _
+   VbVarType.vbLong, _
+   VbVarType.vbSingle, _
+   VbVarType.vbString
+   IsPrim = True
+End Select
+End Function
+
+Function VarLy(A) As String()
+If IsPrim(A) Then VarLy = ApSy(A): Exit Function
+
+End Function
+Function MsgAv_Ly(A$, Av()) As String()
+Dim B$(), C$()
+B = SplitVBar(A)
+C = NyAv_Ly(MsgNy(A), Av)
+MsgAv_Ly = AyAdd(B, C)
+End Function
+Function DbAtt_Rs(A As Database, Att$) As AttRs
+With DbAtt_Rs
     Set .TblRs = A.OpenRecordset(FmtQQ("Select Att,FilTim,FilSz from Att where AttNm='?'", Att))
     If .TblRs.EOF Then
         A.Execute FmtQQ("Insert into Att (AttNm) values('?')", Att)
@@ -193,7 +248,7 @@ If FfnExt(AttFn) <> FfnExt(ToFfn) Then
     Stop
 End If
 If FfnIsExist(ToFfn) Then Stop
-AttRs = DbAttRs(A, Att)
+AttRs = DbAtt_Rs(A, Att)
 With AttRs
     With .AttRs
         .MoveFirst
@@ -222,10 +277,10 @@ F2.SaveToFile ToFfn
 DbAttExpFfn = ToFfn
 End Function
 Sub AttClr(A$)
-DbClrAtt CurrentDb, A
+DbAtt_Clr CurrentDb, A
 End Sub
-Sub DbClrAtt(A As Database, Att$)
-RsClr DbAttRs(A, Att).AttRs
+Sub DbAtt_Clr(A As Database, Att$)
+RsClr DbAtt_Rs(A, Att).AttRs
 End Sub
 Sub RsClr(A As DAO.Recordset)
 With A
@@ -277,17 +332,15 @@ Function AttFfn$(A$)
 'Return Fst-Ffn-of-Att-A
 AttFfn = RsMovFst(AttRs(A).AttRs)!FileName
 End Function
-Function AttHasOnlyOneFile(A$) As Boolean
-AttHasOnlyOneFile = DbAtt_HasOnlyOneFile(CurrentDb, A)
+Function DbAtt_FilCnt%(A As Database, Att$)
+DbAtt_FilCnt = DbAtt_Rs(A, Att).AttRs.RecordCount
 End Function
-Function DbAtt_HasOnlyOneFile(A As Database, Att$) As Boolean
-Debug.Print "DbAtt_HasOnlyFile: " & DbAttRs(A, Att).AttRs.RecordCount
-DbAtt_HasOnlyOneFile = DbAttRs(A, Att).AttRs.RecordCount = 1
+Function AttFilCnt%(A$)
+AttFilCnt = DbAtt_FilCnt(CurrentDb, A)
 End Function
-
 Function AttExp$(A$, ToFfn$)
 'Exporting the only file in Att
-AttExp = DbAttExp(CurrentDb, A, ToFfn)
+AttExp = DbAtt_Exp(CurrentDb, A, ToFfn)
 Debug.Print "-----"
 Debug.Print "AttExp"
 Debug.Print "Att   : "; A
@@ -295,17 +348,16 @@ Debug.Print "ToFfn : "; ToFfn
 Debug.Print "Att is: Export to ToFfn"
 End Function
 Sub AttImp(A$, FmFfn$)
-'Exporting the only file in Att
-DbAttImp CurrentDb, A, FmFfn
+DbAtt_Imp CurrentDb, A, FmFfn
 End Sub
-Sub DbAttImp(A As Database, Att$, FmFfn$)
-AttRs_Imp DbAttRs(A, Att), FmFfn
+Sub DbAtt_Imp(A As Database, Att$, FmFfn$)
+AttRs_Imp DbAtt_Rs(A, Att), FmFfn
 End Sub
 Function AttFstFn$(A$)
 AttFstFn = DbAtt_FstFn(CurrentDb, A)
 End Function
 Function DbAtt_FstFn(A As Database, Att$)
-DbAtt_FstFn = DbAttRs(A, Att).AttRs!FileName
+DbAtt_FstFn = DbAtt_Rs(A, Att).AttRs!FileName
 End Function
 Function RsHasFldV(A As DAO.Recordset, F$, V) As Boolean
 With A
@@ -911,19 +963,88 @@ End Sub
 Function IsNothing(A) As Boolean
 IsNothing = TypeName(A) = "Nothing"
 End Function
-Function AyAddPfx(A, Pfx) As String()
-If Sz(A) = 0 Then Exit Function
-Dim O$(), U&, J&
-U = UB(A)
-ReDim O(U)
-For J = 0 To U
-    O(J) = Pfx & A(J)
+
+Sub ZZ_AyAddPfx()
+Dim A, Act$(), Pfx$, Exp$()
+A = Array(1, 2, 3, 4)
+Pfx = "* "
+Exp = ApSy("* 1", "* 2", "* 3", "* 4")
+GoSub Tst
+Exit Sub
+Tst:
+Act = AyAddPfx(A, Pfx)
+Debug.Assert AyIsEq(Act, Exp)
+Return
+End Sub
+
+Sub ZZ_AyAddSfx()
+Dim A, Act$(), Sfx$, Exp$()
+A = Array(1, 2, 3, 4)
+Sfx = "#"
+Exp = ApSy("1#", "2#", "3#", "4#")
+GoSub Tst
+Exit Sub
+Tst:
+Act = AyAddSfx(A, Sfx)
+Debug.Assert AyIsEq(Act, Exp)
+Return
+End Sub
+
+Sub ZZ_AyAddPfxSfx()
+Dim A, Act$(), Sfx$, Pfx$, Exp$()
+A = Array(1, 2, 3, 4)
+Pfx = "* "
+Sfx = "#"
+Exp = ApSy("* 1#", "* 2#", "* 3#", "* 4#")
+GoSub Tst
+Exit Sub
+Tst:
+Act = AyAddPfxSfx(A, Pfx, Sfx)
+Debug.Assert AyIsEq(Act, Exp)
+Return
+End Sub
+
+Function AyAddPfx(A, Pfx$) As String()
+AyAddPfx = AyMapXPSy(A, "AddPfx", Pfx)
+End Function
+
+Function AyAddSfx(A, Sfx$) As String()
+AyAddSfx = AyMapXPSy(A, "AddSfx", Sfx)
+End Function
+
+Function AddPfx$(A$, Pfx$)
+AddPfx = Pfx & A
+End Function
+
+Function AddSfx$(A$, Sfx$)
+AddSfx = A & Sfx
+End Function
+
+Function AyAddPfxSfx(A, Pfx$, Sfx$) As String()
+AyAddPfxSfx = AyMapXABSy(A, "AddPfxSfx", Pfx, Sfx)
+End Function
+
+Function AyMapXABSy(Ay, XAB$, A, B) As String()
+AyMapXABSy = AyMapXABInto(Ay, XAB, A, B, EmpSy)
+End Function
+Function AddPfxSfx$(A$, Pfx$, Sfx$)
+AddPfxSfx = Pfx & A & Sfx
+End Function
+Function AyMapXABInto(Ay, XAB$, A, B, OInto)
+Dim O, X, J&, U&
+O = OInto
+Erase O
+If U = -1 Then AyMapXABInto = O: Exit Function
+For Each X In Ay
+    Asg Run(XAB, X, A, B), O(J)
+    J = J + 1
 Next
-AyAddPfx = O
+AyMapXABInto = O
 End Function
 Function IsObjAy(A) As Boolean
 IsObjAy = VarType(A) = vbArray + vbObject
 End Function
+
 Function AyRmvEleAt(A, Optional At&)
 Dim O, J&, U&
 U = UB(A)
@@ -3799,7 +3920,7 @@ Function Stru$()
 Stru = DbStru(CurrentDb)
 End Function
 Sub AppExpStru()
-StruWrt Stru, SrcPth & "Stru.txt"
+StrWrt Stru, SrcPth & "Stru.txt"
 End Sub
 Sub FfnDltIfExist(A$)
 On Error GoTo X
@@ -3814,6 +3935,9 @@ End Sub
 
 Sub PthClr(A$)
 FfnAy_DltIfExist PthFfnAy(A)
+End Sub
+Sub SrcPthBrw()
+PthBrw SrcPth
 End Sub
 Function SrcPth$()
 Dim X As Boolean, Y$

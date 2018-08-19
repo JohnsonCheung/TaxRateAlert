@@ -713,7 +713,7 @@ End Sub
 Sub TmpBchRate()
 WDrp "$BchRate #A #A1"
 WRun "select Distinct Sku into [#A1] from [$StkOH]"
-WRun "Insert into [#A1] select Distinct SkuFm from [#ISkuRepackMulti]"
+WRun "Insert into [#A1] (Sku) select Distinct SkuFm from [#ISkuRepackMulti]"
 WRun "select Distinct Sku into [#A] from [#A1]"
 WRun "select Sku,PermitDate,PermitDate as PermitDateEnd,BchNo,Rate as BchRateU,PermitD,x.Permit" & _
 " into [$BchRate] from [#IPermitD] x" & _
